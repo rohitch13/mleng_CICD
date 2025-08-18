@@ -20,7 +20,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             REG="docker.io"
-            IMAGE="${REG}/${{ secrets.DOCKER_USERNAME }}/mleng_sayhi:latest"
+            IMAGE="${REG}/${{ secrets.DOCKERHUB_USERNAME }}/mleng_sayhi:latest"
             APP_NAME="${{ secrets.DOCKERHUB_USERNAME }}_mleng_sayhi"
 
             # Ensure host mount exists
