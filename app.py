@@ -6,7 +6,7 @@ USER_NAME = "rohitkumar"
 VERSION = "1.0.0"
 
 def say_hi(msg:str = "Hi!", file_directory:str = "/app/data/") -> None:
-    # Generate timestamp
+    
     timestamp = datetime.now().strftime("%Y%m%d%H%M")
 
     # Define filename with timestamp
