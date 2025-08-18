@@ -1,0 +1,51 @@
+name: Deploy Docker Image to Server
+on:
+  workflow_run:
+    workflows: ["Build and Push Docker Image"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Deploy to Linux server via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            REG="docker.io"
+            IMAGE="${REG}/${{ secrets.DOCKERHUB_USERNAME }}/mleng_sayhi:latest"
+            APP_NAME="${{ secrets.DOCKERHUB_USERNAME }}_mleng_sayhi"
+
+            # Ensure host mount exists and has permissive perms for demo
+            sudo mkdir -p /opt/assignment_outputs
+            sudo chmod 777 /opt/assignment_outputs
+
+            echo "Logging in to Docker Hub on remote host (token from GH secret substituted client-side)"
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+            docker pull "${IMAGE}"
+            docker image inspect "${IMAGE}" --format 'Cmd={{.Config.Cmd}}' || true
+
+            echo "Recreate container (cleanup previous)"
+            docker rm -f "${APP_NAME}" || true
+
+            # RUN MODE: If app.py is a one-shot (exits), prefer --rm; if long-running, use -d
+            # One-shot, ephemeral:
+            docker run --rm \
+              -v /opt/assignment_outputs:/app/data \
+              --name "${APP_NAME}" \
+              "${IMAGE}" \
+              python app.py
+
+            # If you prefer detached (long-running), replace the run above with:
+            # docker run -d --name "${APP_NAME}" -v /opt/assignment_outputs:/app/data "${IMAGE}" python app.py
+
+            echo "Containers now:"
+            docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Command}}"
