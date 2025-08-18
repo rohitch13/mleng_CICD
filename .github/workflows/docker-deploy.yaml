@@ -1,7 +1,6 @@
 name: Deploy Docker Image to Server
 on:
   workflow_run:
-    # This GitHub Action depends on another, which package up docker and pushes it to a  docker repo
     workflows: ["Build and Push Docker Image"]
     types:
       - completed
@@ -9,7 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # If the docker build went ok and the image was pushed to the docker repo, then deploy it to the server
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Deploy to Linux server
@@ -23,7 +21,7 @@ jobs:
             IMAGE="${REG}/${{ secrets.DOCKERHUB_USERNAME }}/mleng_sayhi:latest"
             APP_NAME="${{ secrets.DOCKERHUB_USERNAME }}_mleng_sayhi"
 
-            # Ensure host mount exists
+            # Removing sudo
             mkdir -p /opt/assignment_outputs
 
             echo "Login & pull…"
