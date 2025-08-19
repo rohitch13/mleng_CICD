@@ -21,22 +21,15 @@ jobs:
             IMAGE="${REG}/${{ secrets.DOCKERHUB_USERNAME }}/mleng_sayhi:latest"
             APP_NAME="${{ secrets.DOCKERHUB_USERNAME }}_mleng_sayhi"
 
-            # Removing sudo
-            mkdir -p /opt/assignment_outputs
-
-            echo "Login & pull…"
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
             docker pull "${IMAGE}"
             docker image inspect "${IMAGE}" --format 'Cmd={{.Config.Cmd}}'
 
-            echo "Recreate container…"
             docker rm -f "${APP_NAME}" || true
 
             docker run -d \
             --name "${APP_NAME}" \
             -v /opt/assignment_outputs:/app/data \
             "${IMAGE}" python app.py
+            
             # docker run -d --name ${{ secrets.DOCKERHUB_USERNAME }}/mleng_sayhi -v /opt/assignment_outputs:/app/data ${{ secrets.DOCKERHUB_USERNAME }}/mleng_sayhi:latest
-
-            echo "Containers now:"
-            docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Command}}"
